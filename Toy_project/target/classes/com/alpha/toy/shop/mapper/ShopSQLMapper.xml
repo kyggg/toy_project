@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alpha.toy.shop.mapper.ShopSQLMapper">
+
+	<!-- 총 가게수 -->
+	<select id="getShopCount" resultType="int">
+		SELECT COUNT(*) FROM toy_shop
+	</select>
+	
+	<!-- 가게 등록하기 -->
+	<insert id="shopRegister">
+	insert into toy_shop values(
+    toy_shop_seq.nextval,
+    #{member_no},
+    #{shop_name},
+    #{shop_image_url},
+    #{shop_content},
+    SYSDATE
+	)
+    </insert>
+	
+	<!-- 가게관리 목록보기 -->
+	<select id="getShopList" resultType="com.alpha.toy.vo.ToyShopVo">
+		select * from(
+    		select t1.*, ROWNUM as rnum from(
+        		select * from toy_shop order by shop_no DESC
+   			 ) t1
+		) t2
+		<![CDATA[
+		where t2.rnum >= (#{page_num}-1)*10+1 
+		and t2.rnum <= #{page_num}*10
+		]]>
+	</select>
+
+	<!-- 가게 상세보기 -->
+	<select id="getShopByNo" resultType="com.alpha.toy.vo.ToyShopVo">
+		select * from toy_shop where shop_no = #{shop_no}
+	</select>
+
+	<!-- 가게 삭제 -->
+	<delete id="deleteShop">
+		delete from toy_shop where shop_no = #{shop_no}
+	</delete>
+	
+	<!-- 가게 수정 -->
+	<update id="updateShop">
+		update toy_shop
+		set shop_name = #{shop_name},
+		shop_content = #{shop_content}
+		where shop_no = #{shop_no}
+	</update>
+
+	<!-- 상품 등록 -->
+	<insert id="productRegister">
+		insert into toy_product values(
+	    toy_product_seq.nextval,
+	    #{shop_no},
+	    #{product_name},
+	    #{product_price},
+	    #{product_image_url},
+	    #{product_count},
+	    #{product_content},
+	    sysdate
+		)
+	</insert>
+	
+	<!-- 상품 목록 보기 -->
+	<select id="getProductList" resultType="com.alpha.toy.vo.ToyProductVo">
+		select * from toy_product
+		where shop_no=#{shop_no}
+		order by product_no ASC 
+	</select>
+
+	<!-- 상품 상세보기 -->
+	<select id="getProductByNo" resultType="com.alpha.toy.vo.ToyProductVo">
+		select * from toy_product where product_no = #{product_no}
+	</select>
+	
+	<!-- 물품 구매 -->
+	<insert id="buyProduct">
+	   insert into toy_buy values(
+	   toy_buy_seq.nextval,
+	   #{member_no},
+	   #{product_no},
+	   #{buy_address},
+	   #{buy_count},
+	   sysdate
+	   )
+	</insert>
+
+	<!-- 구매할수있는지없는지 -->
+	<select id="canBuy" resultType="int">
+		select product_count - (
+		    select NVL(SUM(buy_count),0) from toy_buy where product_no = #{product_no}
+		) - #{buy_count} as remain_cnt from toy_product where product_no = #{product_no}	
+	</select>
+
+	<!-- 구매내역 -->
+	<select id="purchaseBuy" resultType="com.alpha.toy.vo.ToyBuyVo">
+		select * from toy_buy where member_no = #{member_no} order by buy_no asc
+	</select>
+
+	<select id="purchaseProduct" resultType="com.alpha.toy.vo.ToyProductVo">
+		select * from toy_product where product_no = #{product_no}
+	</select>
+
+
+	<!-- 가게 찜하기 -->
+	<insert id="setLike">
+		INSERT INTO toy_shoplike VALUES(
+		toy_shoplike_seq.nextval,
+		#{member_no},
+		#{shop_no}
+		)
+	</insert>
+	
+	<delete id="deleteLike">
+		DELETE FROM toy_shoplike
+		WHERE shop_no=#{shop_no}
+		AND member_no=#{member_no}
+	</delete>
+	
+	<select id="countLike" resultType="int">
+		SELECT COUNT(*) FROM toy_shoplike
+		WHERE shop_no=#{shop_no}
+	</select>
+	
+	<select id="getLike" parameterType="map" resultType="com.alpha.toy.vo.ToyShopLikeVo">
+		SELECT * FROM toy_shoplike
+		WHERE member_no=#{member_no}
+		AND shop_no=#{shop_no}
+	</select>
+	
+	<select id="likeList" resultType="com.alpha.toy.vo.ToyShopLikeVo">
+		SELECT * FROM toy_shoplike
+		WHERE member_no=#{member_no}
+	</select>
+	
+	<select id="likeShopInfo" resultType="com.alpha.toy.vo.ToyShopVo">
+		select * from toy_shop where shop_no = #{shop_no}
+	</select>
+	
+	
+		<select id="getProductList2" resultType="com.alpha.toy.vo.ToyProductVo">
+		select * from toy_product
+		
+	</select>
+	
+	
+
+</mapper>

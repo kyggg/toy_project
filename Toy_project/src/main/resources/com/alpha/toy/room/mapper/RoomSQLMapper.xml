@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alpha.toy.room.mapper.RoomSQLMapper">
+
+<!-- room_no 생성(프로젝트룸 리스트 로드할때 필요) -->
+<select id="createRoomNoPK" resultType="int">
+	select ROOM_NO_SEQ.nextval as room_no from dual
+</select>
+
+<select id="createTdboardNoPk" resultType="int">
+select pt_todo_board_seq.nextval as tdboard_no from dual
+</select>
+
+<!-- 기술스택 시작 -->
+<!-- 기술스택 SELECT -->
+<select id="getStackList" resultType="com.alpha.toy.vo.StackCategoryVo">
+	SELECT * FROM pt_StackCategory
+	ORDER BY stack_category_no ASC
+</select>
+
+<!-- 기술스택 INSERT -->
+<insert id="createStackList">
+	INSERT INTO pt_StackList VALUES(
+    pt_stackList_seq.nextval,
+    #{stack_category_no},
+    #{room_no}
+	)
+</insert>
+
+<!-- 리스트에 불러올 기술스택(room_no사용) Select -->
+<select id="loadStack" resultType="com.alpha.toy.vo.StackCategoryVo">
+	SELECT t1.category_name FROM
+	(SELECT category_name,room_no FROM pt_STACKLIST st INNER JOIN pt_StackCategory sc
+	on st.stack_category_no = sc.stack_category_no) t1
+	WHERE room_no=#{room_no}
+	
+</select>
+<!-- 기술스택 끝 -->
+
+<!-- 프로젝트룸 -->
+<!-- 프로젝트룸 생성 -->
+<insert id="createProjectRoom">
+	INSERT INTO pt_Projectroom VALUES(
+    #{room_no},
+    #{member_no},
+    #{title},
+    #{simpleContent},
+    #{people},
+    #{startDate},
+    #{lastDate},
+    #{address},
+    'S'
+)
+</insert>
+
+<!-- 프로젝트 룸 SELECT -->
+<select id="selectProjectRoom" resultType="com.alpha.toy.vo.ProjectRoomVo">
+	SELECT * FROM pt_Projectroom
+	ORDER BY room_no DESC
+</select>
+
+<!-- 프로젝트 룸 To_DO insert-->
+<insert id="insertToDo">
+	INSERT INTO pt_todo_board VALUES(
+	  	#{tdboard_no},
+	    #{room_no},
+	    #{content},
+	 	#{detailContent},
+	    #{startDate},
+	    #{finishDate},
+	    SYSDATE,
+	    'N'
+	)
+</insert>
+
+<!-- 프로젝트 룸 To_Do-> Do person insert -->
+<insert id="insertDoPerson">
+	INSERT INTO do_person VALUES(
+	  	do_person_seq.NEXTVAL,
+	    #{room_no},
+	   	#{member_no},
+	   	#{tdboard_no}
+	)
+</insert>
+
+<!-- 프로젝트 멤버 셀렉 -->
+
+<select id="selectProjectMembers" resultType="com.alpha.toy.vo.MemberVo">
+select pt_member.member_name, pt_member.member_id, pt_member.member_no from pt_member inner join pt_relationship on 
+pt_relationship.member_no = pt_member.member_no where room_no = #{room_no}
+</select>
+
+<!-- 개인별 ToDo select -->
+<select id="selectToDo" resultType="com.alpha.toy.vo.ToDoBoardVo">
+	select * FROM pt_todo_board where room_no = #{room_no} ORDER BY finishDate ASC
+</select>
+
+<select id="selectMyToDo" resultType="com.alpha.toy.vo.ToDoBoardVo">
+	SELECT * FROM pt_todo_board
+	INNER JOIN do_person ON pt_todo_board.tdboard_no = do_person.tdboard_no 
+	WHERE member_no= #{member_no} AND pt_todo_board.room_no= #{room_no}
+</select>
+
+<select id="selectMyToDoYesCount" resultType="int">
+SELECT count(*) FROM pt_todo_board
+	INNER JOIN do_person ON pt_todo_board.tdboard_no = do_person.tdboard_no 
+	WHERE member_no= #{member_no} AND pt_todo_board.room_no=#{room_no} and pt_todo_board.complete ='완료' 
+</select>
+
+<select id="selectMyToDoNoCount" resultType="int">
+SELECT count(*) FROM pt_todo_board
+	INNER JOIN do_person ON pt_todo_board.tdboard_no = do_person.tdboard_no 
+	WHERE member_no= #{member_no} AND pt_todo_board.room_no=#{room_no} and pt_todo_board.complete ='N' 
+</select>
+
+
+<select id="selectDetailToDo" resultType="com.alpha.toy.vo.ToDoBoardVo">
+	select * FROM pt_todo_board where room_no = #{room_no} and tdboard_no = #{tdboard_no}
+</select>
+
+<select id="completeTodo" resultType="com.alpha.toy.vo.ToDoBoardVo">
+select * from pt_todo_board where complete ='완료' and room_no = #{room_no} ORDER BY finishDate DESC
+</select>
+
+<select id="incompleteTodo" resultType="com.alpha.toy.vo.ToDoBoardVo">
+select * from pt_todo_board where complete ='N' and room_no = #{room_no} ORDER BY finishDate ASC
+</select>
+
+
+<update id="clearToDo">
+UPDATE pt_todo_board SET complete = '완료' WHERE tdboard_no = #{tdboard_no}
+</update>
+
+<delete id="deleteToDo">
+delete pt_todo_board where tdboard_no = #{tdboard_no}
+</delete>
+
+<!-- 통계 -->
+<select id="countToDo" resultType="int">
+	select COUNT(*) from pt_todo_board where room_no = #{room_no}
+</select>
+
+<select id="countNoToDo" resultType="int">
+	select COUNT(*) from pt_todo_board where room_no = #{room_no} and complete = 'N'
+</select>
+
+<select id="countYesToDo" resultType="int">
+	select COUNT(*) from pt_todo_board where room_no = #{room_no} and complete = '완료'
+</select>
+
+
+<!-- 프로젝트 룸 내 게시판 -->
+<!-- 프로젝트 협업툴 내 게시판 -->
+<!-- 게시판 카테고리 생성 -->
+<insert id="createPBCategory">
+	INSERT INTO Projectboard_category VALUES(
+    category_no_seq.nextval,
+    #{room_no},
+    #{ca_name}
+	)
+</insert>
+
+<!-- 게시판 카테고리 가져오기 -->
+<select id="selectPBCategory" resultType="com.alpha.toy.vo.ProjectBoardCategoryVo">
+	SELECT * FROM Projectboard_category
+	WHERE room_no=#{room_no}
+	ORDER BY category_no ASC
+</select>
+
+<!-- 게시판 카테고리 삭제 -->
+<delete id="deletePBCategory">
+	DELETE Projectboard_category
+	WHERE category_no=#{category_no}
+</delete>
+
+<!-- 협업툴 내 게시판 가져오기 -->
+<select id="selectProjectBoard" resultType="com.alpha.toy.vo.ProjectBoardVo">
+	SELECT * FROM PROJECT_BOARD
+	WHERE category_no=#{category_no}
+	
+</select>
+
+<!-- 협업툴 내 게시판 글쓰기 -->
+<insert id="insertProjectBoard">
+	INSERT INTO PROJECT_BOARD VALUES(
+    board_no_seq.nextval,
+    #{category_no},
+    #{member_no},
+    #{title},
+    #{content},
+    SYSDATE
+	)
+</insert>
+
+<!-- 협업툴 내 게시판 글 보기 -->
+<select id="readDetailBoard" resultType="com.alpha.toy.vo.ProjectBoardVo">
+	SELECT * FROM PROJECT_BOARD
+	WHERE board_no=#{board_no}
+</select>
+
+<!-- 협업툴 내 게시판 글 수정 -->
+<update id="updateDetailBoard">
+	UPDATE PROJECT_BOARD SET 
+    title=#{title},
+    content=#{content}
+    WHERE board_no=#{board_no}
+</update>
+
+<!-- 협업툴 내 게시판 글 삭제 -->
+<delete id="deleteDetailBoard">
+	DELETE PROJECT_BOARD
+	WHERE board_no=#{board_no}
+</delete>
+
+<!-- 게시판 끝 -->
+
+<!-- 프로젝트룸 번호로 member_no 가져오기 -->
+<select id="getMemberNoByRoomNo" resultType="int">
+SELECT member_no FROM PT_PROJECTROOM
+WHERE room_no=#{room_no} 
+</select>
+
+
+<select id="selectRelationMemberNo" resultType="com.alpha.toy.vo.RelationShipVo">
+SELECT pt_projectroom.member_no FROM pt_relationship inner join PT_PROJECTROOM on
+pt_relationship.member_no = PT_PROJECTROOM.member_no WHERE PT_PROJECTROOM.room_no=#{room_no}
+</select>
+
+<!-- 팀원평가 insert -->
+
+<insert id="reviewRatingInsert">
+		insert into pt_member_rating VALUES (
+	    	RATING_NO_SEQ.nextval,
+	    	#{room_no},
+	    	#{sender_no},
+	    	#{receiver_no},
+	    	#{rating_score},
+	    	#{one_line_review}
+			)
+</insert>
+
+<!-- 프로젝트 신청 심사 -->
+<insert id="insertApprove">
+	INSERT INTO pt_approve VALUES(
+	    approve_no_seq.nextval,
+	    #{room_no},
+	    #{member_no},
+	    #{application_content},
+	    'S',
+	    SYSDATE
+		)
+</insert>
+
+<!-- 프로젝트 신청심사리스트 select -->
+<select id="selectApprove" resultType="com.alpha.toy.vo.ApproveVo">
+	SELECT * FROM pt_approve
+	WHERE room_no=#{room_no}
+</select>
+
+<!-- 프로젝트 심사결과에 따른 프로젝트 입장화면 나타내기 -->
+<select id="resultApprove" resultType="com.alpha.toy.vo.ApproveVo">
+	SELECT * FROM pt_approve
+	WHERE room_no=#{room_no}
+	AND member_no=#{member_no}
+</select>
+
+<!-- 프로젝트 번호로 member_no가져오기 -->
+<select id="getMemberByApproveNo" resultType="com.alpha.toy.vo.ApproveVo">
+	SELECT * FROM pt_approve
+	WHERE approve_no = #{approve_no}
+</select>
+
+<!-- 프로젝트 신청심사 update -->
+<update id="updateApprove">
+	UPDATE pt_approve set examination=#{examination}
+	WHERE approve_no = #{approve_no}
+</update>
+
+<!-- 채널 관련 쿼리 -->
+
+<!-- 채널 insert -->
+<insert id="createChannel">
+	insert into pt_channel VALUES(
+    PT_CHANNEL_SEQ.nextval,
+    #{room_no},
+    #{channel_name}
+	)
+</insert>
+
+<!-- 채널 select -->
+<select id="selectChannel" resultType="com.alpha.toy.vo.ChannelVo">
+	SELECT * FROM pt_channel
+	WHERE room_no =#{room_no}
+	ORDER BY channel_no ASC
+</select>
+
+<!-- 채널 delete -->
+<select id="deleteChannel">
+	delete pt_channel
+	WHERE channel_no=#{channel_no}
+</select>
+
+<!-- 채팅 관련 쿼리 -->
+<insert id="insertChatting">
+	INSERT INTO pt_chatting values(
+    PT_CHATTING_SEQ.nextval,
+    #{channel_no},
+    #{member_no},
+    #{content},
+    #{content_date}
+	)
+</insert>
+
+<!-- 전체채팅 select -->
+<select id="selectChatting" resultType="com.alpha.toy.vo.ChattingVo">
+   Select * from
+   (
+   SELECt c.*, ROWNUM r FROM (select * from pt_chatting order by chatting_no ASC) c
+   )
+   where channel_no=#{channel_no} 
+   AND r >= #{chatting_no} ORDER BY chatting_no ASC
+</select>
+
+<!-- 내가 쓴 채팅 select -->
+<select id="selectMyChatting" resultType="com.alpha.toy.vo.ChattingVo">
+	SELECT * FROM PT_Chatting
+	WHERE channel_no=#{channel_no}
+	AND chatting_no > #{chatting_no}
+</select>
+
+<!-- MyProject 출력 -->
+<select id="getMyProject" resultType="com.alpha.toy.vo.ProjectRoomVo">
+	SELECT p.room_no,p.title,p.startdate,p.lastdate,p.status FROM pt_relationship r join pt_projectroom p
+	on r.room_no = p.room_no where r.member_no=#{member_no}
+</select>
+
+<!-- 프로젝트 완료/중단 -->
+<update id="finishProject">
+   update PT_PROJECTROOM set status=#{status}
+   WHERE room_no=#{room_no}
+</update>
+
+<select id="leaderNoProjectNo" resultType="int">
+select pt_projectroom.member_no from pt_projectroom inner join pt_member on pt_projectroom.member_no =
+ pt_member.member_no where pt_projectroom.room_no = #{room_no}
+
+</select>
+
+
+
+
+
+
+
+
+</mapper>

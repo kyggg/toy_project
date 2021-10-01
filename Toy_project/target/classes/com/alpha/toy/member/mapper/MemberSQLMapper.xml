@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alpha.toy.member.mapper.MemberSQLMapper">
+	<!-- 회원가입 -->
+	<insert id="signUpMember">
+		INSERT INTO PT_MEMBER VALUES(
+		PT_MEMBER_seq.nextval,
+		#{member_id},
+		#{member_pw},
+		#{member_name},
+		SYSDATE
+		)
+	</insert>
+
+	<!-- 로그인 -->
+	<select id="compareIdAndPw"
+		resultType="com.alpha.toy.vo.MemberVo">
+		SELECT * FROM PT_MEMBER
+		WHERE member_id=#{member_id}
+		AND member_pw=#{member_pw}
+	</select>
+
+	<!-- RelationShip -->
+	<insert id="insertRsship">
+		INSERT INTO pt_RelationShip VALUES(
+		pt_RelationShip_seq.nextval,
+		#{room_no},
+		#{member_no}
+		)
+	</insert>
+
+	<!-- 프로젝트 심사 거절시 relationShip 테이블에서 삭제 -->
+	<delete id="deleteRelationShip">
+		delete pt_relationship
+		WHERE member_no=#{member_no}
+		AND room_no=#{room_no}
+	</delete>
+
+	<!-- 프로젝트 중복참여 안되게 하기 -->
+	<select id="doNotDuplicateParticipation"
+		resultType="com.alpha.toy.vo.RelationShipVo">
+		SELECT * FROM pt_relationship
+		WHERE room_no=#{room_no}
+		AND member_no=#{member_no}
+	</select>
+
+	<!-- 현재 프로젝트에 참여중인 인원 가져오기 -->
+	<select id="selectPeople" resultType="int">
+		SELECT COUNT(*) FROM pt_RelationShip
+		WHERE room_no=#{room_no}
+	</select>
+
+	<!-- 번호로 이름 가져오기 -->
+	<select id="getMemberNameByNo"
+		resultType="com.alpha.toy.vo.MemberVo">
+		SELECT * FROM PT_MEMBER
+		WHERE member_no=#{member_no}
+	</select>
+
+	<!-- 게시판 보기 -->
+	<select id="getMemberByNo"
+		resultType="com.alpha.toy.vo.MemberVo">
+		select * from PT_Member where member_no = #{member_no}
+	</select>
+
+
+	<!-- TO-DO-LIST -->
+	<select id="selectRelationShip"
+		resultType="com.alpha.toy.vo.MemberVo">
+		select * from PT_RELATIONSHIP inner join PT_MEMBER on
+		PT_RELATIONSHIP.MEMBER_NO = PT_MEMBER.MEMBER_NO where ROOM_NO=
+		#{room_no}
+	</select>
+
+	<select id="selectToDoMember"
+		resultType="com.alpha.toy.vo.DoPersonVo">
+		select * FROM do_person where tdboard_no = #{tdboard_no}
+	</select>
+
+	<select id="selectLeader"
+		resultType="com.alpha.toy.vo.ProjectRoomVo">
+		select * from pt_Projectroom where room_no = #{room_no}
+	</select>
+
+	<select id="selectToDoName"
+		resultType="com.alpha.toy.vo.MemberVo">
+		select pt_member.member_name, do_person.member_no,
+		do_person.tdboard_no,pt_member.member_id from do_person inner join
+		PT_MEMBER on
+		do_person.member_no = PT_MEMBER.member_no where tdboard_no = #{tdboard_no}
+
+	</select>
+
+	<!-- 아이디 중복체크 -->
+	<select id="verificationId" resultType="int">
+		SELECT COUNT(*) FROM PT_MEMBER
+		WHERE member_id=#{member_id}
+	</select>
+	
+	<!-- ID 확인 -->
+<select id="checkId" resultType="int">
+   select COUNT(*) from pt_member
+   where member_id = #{member_id}
+</select>
+
+<!-- 비밀번호 확인 -->
+<select id="checkPassword" resultType="int">
+   select COUNT(*) from pt_member
+   where member_pw = #{member_pw}
+</select>
+	
+	
+<!-- 회원탈퇴 -->
+<!-- 회원테이블 -->
+<delete id="deleteMember">
+   delete pt_member
+   where member_no=#{member_no}
+</delete>
+<!-- projectRoom 테이블 -->
+<delete id="deleteProjectRoom">
+   delete pt_projectRoom
+   where member_no=#{member_no}
+</delete>
+<!-- relationship 테이블 -->
+<delete id="deleteRelationshipMember">
+   delete pt_relationship
+   where member_no=#{member_no}
+</delete>
+<!-- doPerson 테이블 -->
+<delete id="deleteDoPerson">
+   delete do_person
+   where member_no=#{member_no}
+</delete>
+<!-- approve 테이블 -->
+<delete id="deleteApprove">
+   delete pt_approve
+   where member_no=#{member_no}
+</delete>
+
+<!-- 비밀번호 재설정 -->
+<update id="updateMemberPW">
+   update pt_member set member_pw=#{member_pw}
+   where member_no=#{member_no}
+</update>
+	
+	
+	
+	
+	
+	
+</mapper>

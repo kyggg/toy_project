@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alpha.toy.message.mapper.MessageSQLMapper">
+	<select id="createMessagePK" resultType="int">
+		SELECT
+		PG_message_seq.nextval FROM Dual
+	</select>
+	<!-- 메시지 작성 -->
+	<insert id="writeMessage">
+		INSERT INTO PG_message VALUES(
+		#{message_no},
+	    #{member_no},
+	    #{member_receive_name},
+	    #{member_send_name},
+	    #{message_title},
+	    #{message_content},
+	    0,
+	    0,
+	    0,
+	    SYSDATE)
+	</insert>
+	<!-- 받은메시지 리스트 -->
+	<select id="getmessage" resultType="com.alpha.toy.vo.MessageVo">
+		SELECT *FROM PG_Message
+			WHERE member_receive_name LIKE '%'||#{member_name}||'%' AND message_receivedelete LIKE '0'
+			ORDER BY MESSAGE_NO DESC
+	</select>
+		
+	<select id="getContentCount" resultType="int">
+	 SELECT COUNT(*) FROM PG_Message
+		WHERE message_readcount = '0' and member_receive_name = #{member_id}
+	</select>
+	
+	<select id="getContentByNo" resultType="com.alpha.toy.vo.MessageVo">
+	<![CDATA[
+		SELECT * FROM PG_Message WHERE Message_no = #{Message_no}
+	]]>
+	</select>
+	<!-- 읽음 확인 -->
+	<update id="increaseReadCount">
+		UPDATE PG_message
+		SET message_readcount = message_readcount+1
+		WHERE message_no= #{message_no}
+	
+	</update>
+	<!-- 보낸 메시지 리스트  -->
+	<select id="getsendmessage" resultType="com.alpha.toy.vo.MessageVo">
+		SELECT *FROM PG_Message
+			WHERE MEMBER_SEND_NAME LIKE '%'||#{member_name}||'%' AND message_senddelete LIKE '0'
+			ORDER BY MESSAGE_NO DESC
+	</select>
+	
+	<select id="getsendContentCount" resultType="int">
+	 SELECT COUNT(*) FROM PG_Message
+		WHERE MEMBER_SEND_NAME LIKE '%'||#{member_name}||'%' AND message_senddelete LIKE '0'
+	</select>
+	
+	<!-- 메시지 완전 삭제 작성만해두었음 -->
+	<delete id="deleteMessage">
+		DELETE FROM PG_Message Where message_no = #{message_no}
+	</delete>
+	
+	
+	<!-- 보낸 메시지 확인 -->
+	<update id="increasesendMessage">
+		UPDATE PG_message
+		SET message_senddelete = message_senddelete+1
+		WHERE message_no =#{message_no}
+	</update>
+	
+	<!-- 받은 메시지 확인 -->
+	<update id="increasereceiveMessage">
+		UPDATE PG_message
+		SET message_receivedelete = message_receivedelete+1
+		WHERE message_no =#{message_no}
+	</update>
+	
+	
+	<select id="messageName" resultType="com.alpha.toy.vo.MemberVo">
+	select member_name from pt_member where member_id = #{member_receive_name}
+	
+	</select>
+	
+	
+	
+	
+	
+</mapper>
